@@ -1,0 +1,80 @@
+###Problem Statement
+
+####Server Utilization Time
+ SQL Interview Question
+
+ ABC is a cloud based company  & is powered by fleets of servers. Senior management has requested data-driven solutions to optimize server usage.
+
+Write a query that calculates the total time that the fleet of servers was running. The output should be in units of full days.
+
+Assumptions:
+
+Each server might start and stop several times.
+
+The total time in which the server fleet is running can be calculated as the sum of each server’s uptime.
+
+server_utilization Table:
+
+Column_Name	        Type
+server_id       	  integer
+status_time  	      timestamp
+session_status	    string
+
+server_utilization Example Input:
+
+server_id	           status_time	         session_status
+1	              08/02/2022    10:00:00	        start
+1	              08/04/2022    10:00:00          stop
+2	              08/17/2022    10:00:00          start
+2	              08/24/2022    10:00:00          stop
+
+
+
+
+
+APPROACH->
+
+1.USING WIINDOW FUNCTION ROW_NUMBER() TO RANK ROWS FOR SAME SERVER (WIIL BE USEFUL TO PERFORM JOIN LATER ON).
+2.GETTING START TIME FOR EACH SERVER THROUGH CTE.
+3.GETTING STOPTIME FOR EACH SERVER THROUGH CTE .
+4.AT LAST JOINING THE BOTH CTE AND SUBTRACTING STOP TIME FROM START TIME FOR EACH SERVER .
+
+Final Query:
+
+WITH start_sessions AS (
+    SELECT 
+        server_id,
+        status_time AS start_time,
+        ROW_NUMBER() OVER (PARTITION BY server_id ORDER BY status_time) AS session_number
+    FROM server_utilization
+    WHERE session_status = 'start'
+), 
+stop_sessions AS (
+    SELECT 
+        server_id,
+        status_time AS stop_time,
+        ROW_NUMBER() OVER (PARTITION BY server_id ORDER BY status_time) AS session_number
+    FROM server_utilization
+    WHERE session_status = 'stop'
+), 
+session_durations AS (
+    SELECT 
+        start.server_id,
+        EXTRACT(EPOCH FROM (stop.stop_time - start.start_time)) AS duration_seconds
+    FROM start_sessions AS start
+    JOIN stop_sessions AS stop
+        ON start.server_id = stop.server_id 
+        AND start.session_number = stop.session_number
+)
+SELECT 
+    ROUND(SUM(duration_seconds) / 86400, 0) AS total_uptime_days
+FROM session_durations;
+
+
+
+
+
+
+
+
+
