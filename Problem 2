@@ -1,0 +1,54 @@
+## Problem Statement- 
+Write a query that identifies the user IDs of individuals who have filed their taxes using any version of TurboTax for three or more consecutive years. Each user is allowed to file taxes once a year using a specific product. Display the output in the ascending order of user IDs.
+
+Filed_taxes Sample Input data :
+Filing_id  User_id        Filing_date         product
+1            1           4/14/2019        TurboTax Desktop 2019
+2            1            4/15/2020        TurboTax Deluxe
+3            1            4/15/2021        TurboTax Online
+4            2            4/07/2020        TurboTax Online
+5            2            4/10/2021        TurboTax Online
+6            3            4/07/2020        TurboTax Online
+7            3           4/15/2021        TurboTax Online
+8            3            3/11/2022        QuickBooks Desktop Pro
+9            4            4/15/2022        QuickBooks Online
+
+
+Approach :
+Used CTEs & Window Function(Row_Number) to filter data , rank records and group similar records . 
+
+SQL Query:
+
+WITH filtered_data AS (
+ SELECT 
+ user_id, 
+ YEAR(filing_date) AS filing_year
+ FROM filed_taxes
+ WHERE product LIKE '%TurboTax%'
+), 
+ranked_data AS (
+ SELECT 
+ user_id,
+ filing_year,
+ ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY filing_year) AS rn
+ FROM filtered_data
+),
+grouped_data AS (
+ SELECT 
+ user_id,
+ filing_year,
+ rn,
+ filing_year - rn AS year_group
+ FROM ranked_data
+),
+consecutive_streaks AS (
+ SELECT 
+ user_id,
+ COUNT(*) AS consecutive_years
+ FROM grouped_data
+ GROUP BY user_id, year_group
+ HAVING COUNT(*) >= 3
+)
+SELECT DISTINCT user_id
+FROM consecutive_streaks
+ORDER BY user_id;
