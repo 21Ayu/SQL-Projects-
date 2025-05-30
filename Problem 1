@@ -3,7 +3,7 @@
 ####Server Utilization Time
  SQL Interview Question
 
- ABC is a cloud based company  & is powered by fleets of servers. Senior management has requested data-driven solutions to optimize server usage.
+ABC is a cloud based company  & is powered by fleets of servers. Senior management has requested data-driven solutions to optimize server usage.
 
 Write a query that calculates the total time that the fleet of servers was running. The output should be in units of full days.
 
