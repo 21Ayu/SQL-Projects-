@@ -1,0 +1,41 @@
+🧾 Problem Statement
+
+ Accenture is identifying Subject Matter Experts (SMEs) based on employees' experience across different domains. An employee qualifies as an SME if they meet either of the following:
+
+ ✅ 8 or more years of experience in a single domain
+ ✅ 12 or more years of experience across two different domains
+ ❌ Employees with experience in more than two domains are excluded.
+
+📊 Sample Input Table: Employee_expertise
+
+| Employee_id | Domain         | Years_of_experience |
+|------------- |------------------------ |---------------------- |
+| 101      | Digital Transformation | 9           | 
+| 102      | Supply Chain       | 6           |
+| 102      | IoT           | 7            |
+| 103      | Change Management    | 4           |
+| 104      | DevOps          | 5           |
+| 104      | Cloud Migration     | 5          |
+| 104      | Agile Transformation   | 5           |
+
+
+
+🧠 Approach:
+
+=>Select employees with ≥ 8 years in a single domain
+=>Union with employees who have ≥ 12 years across exactly two domains
+=>Exclude employees with experience in more than two domains
+=>Group by employee_id and apply conditions using HAVING
+
+SQL Query :-
+
+SELECT employee_id
+FROM employee_expertise
+WHERE years_of_experience >= 8
+
+UNION
+
+SELECT employee_id
+FROM employee_expertise
+GROUP BY employee_id
+HAVING SUM(years_of_experience) >= 12 AND COUNT(*) = 2;
