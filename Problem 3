@@ -1,0 +1,48 @@
+Problem Statement:
+
+ The Apple retention team wants to calculate the percentage of buyers who bought AirPods directly after buying iPhones, with no intermediate purchases in between.
+
+📘 Clarifications:
+* The user must have purchased an iPhone first, followed immediately by AirPods.
+* Even if both are purchased on the same day, iPhone must appear first in the transaction order.
+* No other product should be purchased between the iPhone and AirPods.
+
+📊 Sample Input Table: transactions
+
+transaction_id customer_id product_name transaction_timestamp 
+1 101 iPhone 08/08/2022 00:00:00
+2 101 AirPods 08/08/2022 00:00:00
+5 301 iPhone 09/05/2022 00:00:00
+6 301 iPad 09/06/2022 00:00:00
+7 301 AirPods 09/07/2022 00:00:00
+
+🧠 Approach:
+* Use ROW_NUMBER() to assign the transaction order for each customer.
+* Join consecutive transactions and check for "iPhone → AirPods" sequence.
+* Count such users and compute the percentage over all unique customers.
+
+💡 SQL Query 
+
+WITH ordered_txns AS (
+ SELECT 
+ customer_id,
+ product_name,
+ ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY transaction_timestamp) AS rn
+ FROM transactions
+),
+joined_txns AS (
+ SELECT 
+ a.customer_id
+ FROM ordered_txns a
+ JOIN ordered_txns b
+ ON a.customer_id = b.customer_id AND a.rn = b.rn - 1
+ WHERE a.product_name = 'iPhone' AND b.product_name = 'AirPods'
+),
+total_customers AS (
+ SELECT COUNT(DISTINCT customer_id) AS total FROM transactions
+)
+
+SELECT 
+ ROUND(COUNT(DISTINCT j.customer_id) * 100 / t.total, 0) AS airpod_after_iphone_pct
+FROM joined_txns j
+JOIN total_customers t
