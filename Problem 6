@@ -1,0 +1,56 @@
+🧾 Problem Statement:
+
+The Growth Team at DoorDash wants to ensure that new users, who make orders within their first 14 days on the platform, have a positive experience. However, several issues have been flagged as contributing to a bad experience, such as:
+🚫 Orders being completed incorrectly (missing or wrong items).
+🚫 Orders not being received (e.g., due to wrong address or drop-off spot).
+🚫 Orders delivered late (actual delivery time > 30 minutes after order timestamp).
+Calculate the bad experience rate for new users who signed up in June 2022, considering only their first 14 days of activity. The output should be the percentage of bad experiences, rounded to 2 decimal places.
+
+📊 Sample Input Table: orders
+
+|order_id | customer_id | trip_id |    status       |   order_timestamp   |
+|----------|---------|--------- |--------------------------|-----------------------|
+| 727424  | 8472    | 100463 | completed successfully | 06/02/2022 09:12:00    |
+| 225123  | 2341    | 100482 | completed incorrectly   | 06/05/2022 14:40:00    |
+| 141367  | 1314    | 100362 | completed incorrectly   | 06/07/2022 15:03:00    |
+| 582197  | 5421    | 100567 | never received       | 07/01/2022 12:22:00    |
+| 253613  | 1314    | 100213 | completed successfully | 06/12/2022 13:43:00    |
+
+
+📊 Sample Input Table: customers
+ customer_id | signup_timestamp 
+ 8472 | 05/30/2022 10:15:00 
+ 2341 | 06/01/2022 08:45:00 
+ 1314 | 05/29/2022 17:20:00 
+
+
+📊 Sample Input Table: trips
+ trip_id | actual_delivery_timestamp | estimated_delivery_timestamp 
+ 100463 06/02/2022 09:35:00 06/02/2022 09:30:00 
+ 100482 06/05/2022 14:55:00 06/05/2022 14:30:00 
+ 100362 06/07/2022 15:00:00 06/07/2022 15:30:00 
+
+🧠 Approach:
+
+✅ Identify users who joined in June 2022
+✅ Filter orders made within 14 days of user signup
+✅ Join with trips to compare actual_delivery_timestamp and estimated_delivery_timestamp
+✅ Label orders as bad if status is 'completed incorrectly' or 'never received', or if they are delivered > 30 minutes late
+✅ Calculate the percentage of bad experiences
+
+💡 SQL Query:
+
+WITH cte AS (
+ SELECT * 
+ FROM orders o
+ JOIN customers c ON o.customer_id = c.customer_id
+ WHERE DATE_PART('month', c.signup_timestamp) = 6 
+ AND DATE_PART('days', o.order_timestamp - c.signup_timestamp) < 14
+),
+cte2 AS (
+ SELECT COUNT(*) AS cnt FROM cte
+)
+SELECT ROUND(COUNT(*) * 100.0 / cte2.cnt, 2) AS bad_experience_rate
+FROM cte, cte2
+WHERE status != 'completed successfully'
+GROUP BY cte2.cnt;
